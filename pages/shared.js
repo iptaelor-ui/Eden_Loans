@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-// ── Supabase ── (replace with your Eden Supabase credentials)
 export const supabase = createClient(
   "https://qdzxbjnqnpnaxuqduptw.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkenhiam5xbnBuYXh1cWR1cHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MzkzMTQsImV4cCI6MjA5MTQxNTMxNH0.ION6QtscAxLGer8YMa3KiaZR00-pDynL_LOryO_74s8"
