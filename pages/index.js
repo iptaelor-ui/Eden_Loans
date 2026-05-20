@@ -622,6 +622,81 @@ function RecordsPage({ settled, setSettled, showToast }) {
   );
 }
 
+
+// ── Notifications Page ─────────────────────────────────────────────────────────
+function NotifSection({ title, color, borderColor, loans, showToast }) {
+  return (
+    <div className="card" style={{borderTop:`3px solid ${borderColor}`}}>
+      <div className="card-head">
+        <div className="card-title" style={{color}}>{title} <span style={{background:color,color:"#fff",borderRadius:"20px",padding:"2px 10px",fontSize:"0.72rem",marginLeft:6}}>{loans.length}</span></div>
+      </div>
+      {loans.length === 0 ? (
+        <div style={{padding:"1.5rem",textAlign:"center",color:"var(--muted)",fontSize:"0.85rem"}}>
+          {title.includes("Overdue") ? "✅ No overdue loans — great!" : title.includes("Today") ? "No loans due today." : title.includes("1–3") ? "No loans due in the next 3 days." : "No loans due in the next 7 days."}
+        </div>
+      ) : (
+        <div className="tbl-wrap">
+          <table>
+            <thead><tr><th>Loan ID</th><th>Client</th><th>Phone</th><th>Amount</th><th>Due Date</th><th>Link</th></tr></thead>
+            <tbody>
+              {loans.map(loan => (
+                <tr key={loan.id}>
+                  <td style={{fontWeight:800,fontFamily:"'Playfair Display',serif",fontSize:"0.8rem"}}>{loan.id}</td>
+                  <td style={{fontWeight:700}}>{loan.client_name}</td>
+                  <td style={{fontSize:"0.78rem",color:"var(--muted)"}}>{loan.client_phone||"—"}</td>
+                  <td style={{fontWeight:700}}>{fmt(loan.amount)}</td>
+                  <td style={{fontWeight:800,color}}>{fmtDate(loan.due_date)}</td>
+                  <td><CopyLinkBtn loanId={loan.id} showToast={showToast}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NotificationsPage({ loans, showToast }) {
+  const now = new Date();
+  const in7 = new Date(now.getTime() + 7*86400000);
+  const in3 = new Date(now.getTime() + 3*86400000);
+  const overdueLoans = loans.filter(l => isOverdue(l));
+  const dueTodayLoans = loans.filter(l => l.status==="active" && !isOverdue(l) && new Date(l.due_date+"T00:00:00").toDateString() === now.toDateString());
+  const due3Loans = loans.filter(l => l.status==="active" && !isOverdue(l) && new Date(l.due_date+"T00:00:00") <= in3 && new Date(l.due_date+"T00:00:00").toDateString() !== now.toDateString());
+  const due7Loans = loans.filter(l => l.status==="active" && !isOverdue(l) && new Date(l.due_date+"T00:00:00") > in3 && new Date(l.due_date+"T00:00:00") <= in7);
+
+  return (
+    <>
+      <div style={{marginBottom:"1.25rem"}}>
+        <h1 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",fontWeight:700,marginBottom:4}}>🔔 Alerts & Notifications</h1>
+        <p style={{color:"var(--muted)",fontSize:"0.85rem"}}>Stay on top of overdue and upcoming loan repayments.</p>
+      </div>
+      <div className="stats-row" style={{marginBottom:"1.5rem"}}>
+        <div className="stat-card" style={{borderTopColor:"var(--red)"}}>
+          <div className="stat-label">Overdue</div>
+          <div className="stat-value" style={{color:overdueLoans.length>0?"var(--red)":"inherit"}}>{overdueLoans.length}</div>
+          <div className="stat-sub">past due date</div>
+        </div>
+        <div className="stat-card amber">
+          <div className="stat-label">Due Today</div>
+          <div className="stat-value" style={{color:dueTodayLoans.length>0?"#d97706":"inherit"}}>{dueTodayLoans.length}</div>
+          <div className="stat-sub">due right now</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Due This Week</div>
+          <div className="stat-value">{due3Loans.length + due7Loans.length}</div>
+          <div className="stat-sub">within 7 days</div>
+        </div>
+      </div>
+      <NotifSection title="🚨 Overdue Loans" color="var(--red)" borderColor="var(--red)" loans={overdueLoans} showToast={showToast}/>
+      <NotifSection title="⏰ Due Today" color="#d97706" borderColor="#d97706" loans={dueTodayLoans} showToast={showToast}/>
+      <NotifSection title="⚠️ Due in 1–3 Days" color="#d97706" borderColor="#f59e0b" loans={due3Loans} showToast={showToast}/>
+      <NotifSection title="📅 Due in 4–7 Days" color="var(--blue)" borderColor="var(--blue)" loans={due7Loans} showToast={showToast}/>
+    </>
+  );
+}
+
 function SummaryPage({ loans, settled }) {
   const allLoans = [...loans, ...settled];
   const monthlyData = {};
