@@ -491,9 +491,7 @@ function ClientsPage({ loans, setLoans, settled, setSettled, showToast }) {
 }
 
 function LoanModal({ loan, onClose, onSave, saving }) {
-  const blank = { client_name:"",client_phone:"",client_nrc:"",client_email:"",amount:"",interest_rate:"",processing_date:new Date().toISOString().slice(0,10),due_date:"",repayment:"monthly",collateral:"",collateral_value:"",status:"active",terms:"The borrower agrees to repay the full loan amount plus interest by the due date. The collateral will be held by Sonkhela Soft Loans until full repayment is made. Failure to repay by the due date may result in forfeiture of the stated collateral. This agreement is governed by the laws of the Republic of Zambia. 
-                https://docs.google.com/document/d/12AVjBpSUDCzcTPsM0a0BEPRcfC7RacIS247n7ZK-CUY/edit?tab=t.0
-    " };
+  const blank = { client_name:"",client_phone:"",client_nrc:"",client_email:"",amount:"",interest_rate:"",processing_date:new Date().toISOString().slice(0,10),due_date:"",repayment:"monthly",collateral:"",collateral_value:"",status:"active",terms:"The borrower agrees to repay the full loan amount plus interest by the due date. The collateral will be held by Sonkhela Soft Loans until full repayment is made. Failure to repay by the due date may result in forfeiture of the stated collateral. This agreement is governed by the laws of the Republic of Zambia." };
   const [f, setF] = useState(loan || blank);
   const set = (k,v) => setF(p=>({...p,[k]:v}));
   const uploadCollateral = (e) => {
