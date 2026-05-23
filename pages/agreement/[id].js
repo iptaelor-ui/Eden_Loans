@@ -224,6 +224,12 @@ export default function AgreementPage() {
           <div className="agr-grid">
             <div className="agr-cell full"><div className="agr-cell-label">Item / Description</div><div className="agr-cell-value">{loan.collateral}</div></div>
             {loan.collateral_value && <div className="agr-cell"><div className="agr-cell-label">Estimated Value</div><div className="agr-cell-value">{fmt(loan.collateral_value)}</div></div>}
+            {loan.collateral_photo && (
+              <div className="agr-cell full">
+                <div className="agr-cell-label">Collateral Photo</div>
+                <img src={loan.collateral_photo} alt="collateral" style={{maxWidth:"100%",maxHeight:200,objectFit:"contain",borderRadius:8,marginTop:6,display:"block"}}/>
+              </div>
+            )}
           </div>
 
           {loan.terms && (<><div className="agr-section-title">📋 Terms & Conditions</div><div className="agr-terms">{loan.terms}</div></>)}
