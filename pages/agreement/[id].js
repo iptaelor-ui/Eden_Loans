@@ -232,7 +232,13 @@ export default function AgreementPage() {
             )}
           </div>
 
-          {loan.terms && (<><div className="agr-section-title">📋 Terms & Conditions</div><div className="agr-terms">{loan.terms}</div></>)}
+          {loan.terms && (<><div className="agr-section-title">📋 Terms & Conditions</div><div className="agr-terms">{loan.terms}</div>
+            <div style={{marginTop:"0.75rem"}}>
+              <a href="https://docs.google.com/document/d/12AVjBpSUDCzcTPsM0a0BEPRcfC7RacIS247n7ZK-CUY/edit?tab=t.0" target="_blank" rel="noreferrer" style={{fontSize:"0.82rem",fontWeight:700,color:"#1a7a4a",textDecoration:"underline",display:"inline-flex",alignItems:"center",gap:5}}>
+                📄 Click for Full Terms & Conditions
+              </a>
+            </div>
+          </>)}
 
           {/* Signatures */}
           <div className="agr-section-title">✍️ Signatures</div>
