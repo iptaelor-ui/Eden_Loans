@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase, fmt, fmtDate, isOverdue, genId, AGR_STYLES } from "./shared";
 
+// Lightweight columns for list views. Excludes collateral_photo and
+// client_signature (base64 images) which caused statement timeouts (57014).
+const LOAN_LIST_COLUMNS = "id, client_name, client_phone, client_nrc, client_email, amount, interest_rate, processing_date, due_date, repayment, collateral, collateral_value, status, terms, created_at";
+
 const ADMIN_STYLES = `
 ${AGR_STYLES}
 body{background:var(--bg);transition:background 0.3s,color 0.3s;}
@@ -160,9 +164,10 @@ export default function App() {
 
   const loadLoans = async () => {
     const [loansRes, settledRes] = await Promise.all([
-      supabase.from("loans").select("*").order("created_at", { ascending: false }),
+      supabase.from("loans").select(LOAN_LIST_COLUMNS).order("created_at", { ascending: false }),
       supabase.from("settled_loans").select("*").order("settled_at", { ascending: false }),
     ]);
+    if (loansRes.error) showToast("Failed to load loans. Please refresh.","error");
     if (loansRes.data) setLoans(loansRes.data);
     if (settledRes.data) setSettled(settledRes.data);
   };
@@ -361,6 +366,7 @@ function ClientsPage({ loans, setLoans, settled, setSettled, showToast }) {
   const [editTarget, setEditTarget] = useState(null);
   const [saving, setSaving] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(null);
+  const [openingEdit, setOpeningEdit] = useState(null);
 
   const filtered = loans.filter(l => {
     const s = ((l.client_name||"")+l.id).toLowerCase().includes(search.toLowerCase());
@@ -368,6 +374,16 @@ function ClientsPage({ loans, setLoans, settled, setSettled, showToast }) {
     if (filter==="overdue") return s && isOverdue(l);
     return s && l.status===filter && !isOverdue(l);
   });
+
+  // Fetch the full record (including collateral photo) only when editing one loan
+  const openEdit = async (loan) => {
+    setOpeningEdit(loan.id);
+    const { data, error } = await supabase.from("loans").select("*").eq("id", loan.id).single();
+    setOpeningEdit(null);
+    if (error || !data) { showToast("Failed to load agreement.","error"); return; }
+    setEditTarget(data);
+    setShowModal(true);
+  };
 
   const deleteLoan = async (id) => {
     if (!confirm("Delete this loan agreement permanently?")) return;
@@ -395,16 +411,19 @@ function ClientsPage({ loans, setLoans, settled, setSettled, showToast }) {
 
   const handleSave = async (data) => {
     setSaving(true);
+    // Keep heavy image fields out of the list state to avoid bloating memory
+    const { collateral_photo, client_signature, ...listData } = data;
     if (editTarget) {
       const { error } = await supabase.from("loans").update(data).eq("id", editTarget.id);
       if (error) { showToast("Failed to save.","error"); setSaving(false); return; }
-      setLoans(p => p.map(l => l.id===editTarget.id ? {...l,...data} : l));
+      setLoans(p => p.map(l => l.id===editTarget.id ? {...l,...listData} : l));
       showToast("Agreement updated! ✓");
     } else {
-      const newLoan = {...data, id:genId()};
+      const newId = genId();
+      const newLoan = {...data, id:newId};
       const { error } = await supabase.from("loans").insert(newLoan);
       if (error) { showToast("Failed to create.","error"); setSaving(false); return; }
-      setLoans(p => [newLoan,...p]);
+      setLoans(p => [{...listData, id:newId},...p]);
       showToast("Agreement created! ✓");
     }
     setSaving(false); setShowModal(false);
@@ -473,7 +492,7 @@ function ClientsPage({ loans, setLoans, settled, setSettled, showToast }) {
                     <td><CopyLinkBtn loanId={loan.id} showToast={showToast}/></td>
                     <td>
                       <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                        <button className="btn btn-ghost btn-xs" onClick={() => {setEditTarget(loan);setShowModal(true);}}>Edit</button>
+                        <button className="btn btn-ghost btn-xs" disabled={openingEdit===loan.id} onClick={() => openEdit(loan)}>{openingEdit===loan.id?"...":"Edit"}</button>
                         {loan.client_email && <button className="btn btn-email btn-xs" disabled={sendingEmail===loan.id} onClick={() => sendReminder(loan)}>{sendingEmail===loan.id?"...":"📧"}</button>}
                         <button className="btn btn-red btn-xs" onClick={() => deleteLoan(loan.id)}>✕</button>
                       </div>
